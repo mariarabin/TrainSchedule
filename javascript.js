@@ -1,6 +1,5 @@
 // Steps to complete:
 function startTime() {
-
     var today = new Date();
     var h = today.getHours();
     //h = h > 12 ? h - 12 : h;
@@ -16,12 +15,6 @@ function checkTime(i) {
     if (i < 10) { i = "0" + i };  // add zero in front of numbers < 10
     return i;
 }
-
-
-// 3. Create a way to retrieve employees from the employee database.
-// 4. Create a way to calculate the months worked. Using difference between start and current time.
-//    Then use moment.js formatting to set difference in months.
-// 5. Calculate Total billed
 
 // 1. Initialize Firebase
 var config = {
@@ -57,19 +50,13 @@ $("#add-train-btn").on("click", function (event) {
     // Uploads employee data to the database
     database.ref().push(newTrain);
 
-    // Logs everything to console
-    console.log(newTrain.trainName);
-    console.log(newTrain.destination);
-    console.log(newTrain.firstTraintime);
-    console.log(newTrain.freq);
-
     alert("New Train Schedule has been successfully added");
 
     // Clears all of the text-boxes
     $("#train-name-input").val("");
     $("#dest-input").val("");
-    $("#start-input").val("06:00");
-    $("#freq-input").val("15");
+    $("#start-input").val("");
+    $("#freq-input").val("");
 });
 
 // 3. Create Firebase event for adding train to the database and a row in the html when a user adds an entry
@@ -82,46 +69,51 @@ database.ref().on("child_added", function (childSnapshot) {
     var firstTraintime = childSnapshot.val().firstTraintime;
     var freq = childSnapshot.val().freq;
 
-    // Train Info
-    console.log(trainName);
-    console.log(destination);
-    console.log(firstTraintime);
-    console.log(freq);
+    var startTimeConverted = moment(firstTraintime, "hh:mm").subtract(1, "years");
+    var startTimeConverted2 = moment(startTimeConverted).format("HH:mm");
+    var currentTime = moment();
+    var diffTime = moment().diff(moment(startTimeConverted), "minutes");
 
-    // Prettify the employee start
-    //var empStartPretty = moment.unix(empStart).format("MM/DD/YYYY");
+    var tRemainder = diffTime % freq;
+    var tMinutesTillTrain = freq - tRemainder;
+    // Next Train
+    var nextTrain = moment().add(tMinutesTillTrain, "minutes");
+    var catchTrain = moment(nextTrain).format("HH:mm");
 
-    // Calculate the months worked using hardcore math
-    // To calculate the months worked
-    //var empMonths = moment().diff(moment(empStart, "X"), "months");
-    //console.log(empMonths);
+    console.log("nextTrain is: " + nextTrain)
+    console.log("catchTrain is: " + catchTrain)
+    console.log("startTimeConverted2 is: " + startTimeConverted2)
 
-    // Calculate the total billed rate
-    //var empBilled = empMonths * empRate;
-    //console.log(empBilled);
+    if (startTimeConverted2 < catchTrain) {
 
-    // Create the new row
-    var newRow = $("<tr>").append(
-        $("<td>").html(trainName),
-        $("<td>").html(destination),
-        $("<td>").html(freq)
-        //$("<td>").text(timeArrival),
-        //$("<td>").text(minsAway),
-        //$("<td>").text(empStartPretty),
-        //$("<td>").text(empMonths),
-        //$("<td>").text(empRate),
-        //$("<td>").text(empBilled)
-    );
-    console.log(newRow);
+        // Create the new row
+        var newRow = $("<tr>").append(
+            $("<td>").html(trainName),
+            $("<td>").html(destination),
+            $("<td>").html(freq),
+            $("<td>").html(catchTrain),
+            $("<td>").html(tMinutesTillTrain),
 
-    // Append the new row to the table
-    $("#new-train-table > tbody").append(newRow);
+        );
+        //console.log(newRow);
+        // Append the new row to the table
+        $("#new-train-table > tbody").append(newRow);
+    }
+
+    else {
+        var newRow = $("<tr>").append(
+            $("<td>").html(trainName),
+            $("<td>").html(destination),
+            $("<td>").html(freq),
+            $("<td>").html(startTimeConverted2),
+            $("<td>").html("Not yet started"),
+
+        );
+        //console.log(newRow);
+        // Append the new row to the table
+        $("#new-train-table > tbody").append(newRow);
+    }
+
+
 });
 
-  // Example Time Math
-  // -----------------------------------------------------------------------------
-  // Assume Employee start date of January 1, 2015
-  // Assume current date is March 1, 2016
-
-  // We know that this is 15 months.
-  // Now we will create code in moment.js to confirm that any attempt we use meets this test case
